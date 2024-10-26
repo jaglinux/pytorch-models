@@ -3,6 +3,7 @@ import torch.nn as nn
 import torch.optim as optim
 from torchvision import datasets, transforms
 
+import sys
 # Define the CNN model
 class Cifar10Model(nn.Module):
     def __init__(self):
@@ -21,6 +22,14 @@ class Cifar10Model(nn.Module):
         x = self.fc2(x)
         return x
 
+# Create device
+_device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+print("device found ", _device)
+if torch.cuda.is_available() and torch.version.hip:
+    print("PyTorch is using ROCm")
+else:
+    print("PyTorch is not using ROCm")
+
 # Load CIFAR-10 dataset
 transform = transforms.Compose([
     transforms.ToTensor(),
@@ -38,10 +47,18 @@ model = Cifar10Model()
 criterion = nn.CrossEntropyLoss()
 optimizer = optim.Adam(model.parameters())
 
+# move to device
+model = model.to(_device)
+model_param = next(model.parameters())
+if model_param.is_cuda:
+    print("Model is on CUDA ", model_param.device)
+else:
+    print("Model is on CPU")
 # Train the model
 for epoch in range(10):
     for i, data in enumerate(train_loader, 0):
         inputs, labels = data
+        inputs, labels = inputs.to(_device), labels.to(_device)
         optimizer.zero_grad()
         outputs = model(inputs)
         loss = criterion(outputs, labels)
@@ -54,6 +71,7 @@ total = 0
 with torch.no_grad():
     for data in test_loader:
         images, labels = data
+        images, labels = images.to(_device), labels.to(_device)
         outputs = model(images)
         _, predicted = torch.max(outputs.data, 1)
         total += labels.size(0)
