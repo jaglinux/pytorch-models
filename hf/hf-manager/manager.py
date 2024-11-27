@@ -4,10 +4,6 @@ import sys
 from transformers import AutoModelForCausalLM
 import datasets
 
-# model_name = "gpt2"
-# model = AutoModelForCausalLM.from_pretrained(model_name)
-# print("model is ", model.state_dict().keys())
-# print("model is ", model.state_dict()['transformer.wte.weight'].detach().numpy().shape)
 class model:
     def __init__(self, name="gpt2"):
         self.name = name
